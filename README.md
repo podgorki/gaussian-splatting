@@ -478,6 +478,16 @@ python convert.py -s <location> --skip_matching [--resize] #If not resizing, Ima
 </details>
 <br>
 
+### Docker
+
+A dockerfile has been added to build the repo.
+
+To build run: 
+
+```docker build -t gaussian-splatting:cuda11.7-pytorch1.13-ubuntu22 . -f Dockerfile```
+
+To run the container: 
+
 ## FAQ
 - *Where do I get data sets, e.g., those referenced in ```full_eval.py```?* The MipNeRF360 data set is provided by the authors of the original paper on the project site. Note that two of the data sets cannot be openly shared and require you to consult the authors directly. For Tanks&Temples and Deep Blending, please use the download links provided at the top of the page. Alternatively, you may access the cloned data (status: August 2023!) from [HuggingFace](https://huggingface.co/camenduru/gaussian-splatting)
 
@@ -511,3 +521,5 @@ pip install submodules\simple-knn
 - *Wait, but ```<insert feature>``` isn't optimized and could be much better?* There are several parts we didn't even have time to think about improving (yet). The performance you get with this prototype is probably a rather slow baseline for what is physically possible.
 
 - *Something is broken, how did this happen?* We tried hard to provide a solid and comprehensible basis to make use of the paper's method. We have refactored the code quite a bit, but we have limited capacity to test all possible usage scenarios. Thus, if part of the website, the code or the performance is lacking, please create an issue. If we find the time, we will do our best to address it.
+
+
