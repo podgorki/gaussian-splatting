@@ -65,7 +65,7 @@ RUN cd colmap && \
 
 # Clone gaussian-splatting and compiling the SIBR viewer
 WORKDIR /root
-RUN git clone https://github.com/graphdeco-inria/gaussian-splatting --recursive
+RUN git clone https://github.com/podgorki/gaussian-splatting.git --recursive
 RUN cd gaussian-splatting/SIBR_viewers && \
     cmake -Bbuild . -DCMAKE_BUILD_TYPE=Release && \
     cmake --build build -j4 --target install
