@@ -7,23 +7,7 @@ import torchvision
 
 from arguments import ModelParams, PipelineParams, get_combined_args
 from gaussian_renderer import GaussianModel
-from scene import Scene
-
-parser = ArgumentParser(description="Testing script parameters")
-model = ModelParams(parser, sentinel=True)
-args = get_combined_args(parser)
-print("Rendering " + args.model_path)
-
-iteration = -1
-model = model.extract(args)
-gaussians = GaussianModel(model.sh_degree)
-scene = Scene(model, gaussians, load_iteration=iteration, shuffle=False)
-
-bg_color = [1, 1, 1] if model.white_background else [0, 0, 0]
-background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
-render_path = os.path.join(model.model_path, "custom", "ours_{}".format(iteration), "renders")
-makedirs(render_path, exist_ok=True)
-
+from scene import Scene2 as Scene
 
 class DummyCamera:
     def __init__(self,
@@ -96,6 +80,21 @@ class DummyPipeline:
     convert_SHs_python = False
     compute_cov3D_python = False
     debug = False
+
+parser = ArgumentParser(description="Testing script parameters")
+model = ModelParams(parser, sentinel=True)
+args = get_combined_args(parser)
+print("Rendering " + args.model_path)
+
+iteration = -1
+model = model.extract(args)
+gaussians = GaussianModel(model.sh_degree)
+scene = Scene(model, gaussians, load_iteration=iteration, shuffle=False)
+
+bg_color = [1, 1, 1] if model.white_background else [0, 0, 0]
+background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
+render_path = os.path.join(model.model_path, "custom", "ours_{}".format(iteration), "renders")
+makedirs(render_path, exist_ok=True)
 
 
 rotx = np.array([-20]) * np.pi / 180
