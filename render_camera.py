@@ -6,7 +6,7 @@ import torch
 import torchvision
 
 from arguments import ModelParams, PipelineParams, get_combined_args
-from gaussian_renderer import GaussianModel
+from gaussian_renderer import GaussianModel, render
 from scene import Scene2 as Scene
 
 class DummyCamera:
@@ -102,9 +102,7 @@ roty = np.array([165]) * np.pi / 180  # need to negate to match o3d
 rotz = np.array([0]) * np.pi / 180
 R = make_rotation(rotx, roty, rotz)
 
-tx = np.array([.5])
-ty = np.array([-1])
-tz = np.array([5])
+tx, ty, tz = .5, -1, 5
 
 T = np.array([tx, ty, tz])
 
@@ -112,4 +110,7 @@ FoVx, FoVy = 1.0, 1.0
 W, H = 1500, 1500
 mycam = DummyCamera(R, T, FoVx, FoVy, W=W, H=W)
 rendering = render(mycam, gaussians, DummyPipeline(), background)["render"]
-torchvision.utils.save_image(rendering, os.path.join(render_path, '{0:05d}'.format(0) + ".png"))
+path_render=  os.path.join(render_path, '{0:05d}'.format(0) + ".png")
+print(f'Outputting render to: {path_render}')
+
+torchvision.utils.save_image(rendering, path_render)
