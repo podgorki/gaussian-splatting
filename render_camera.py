@@ -9,9 +9,12 @@ from arguments import ModelParams, PipelineParams, get_combined_args
 from gaussian_renderer import GaussianModel, render
 from scene import Scene2 as Scene
 
+
 class DummyCamera:
     def __init__(self,
-                 R: np.ndarray, T: np.ndarray, FoVx: float, FoVy: float, W: int, H: int,
+                 R: np.ndarray, T: np.ndarray,
+                 FoVx: float, FoVy: float, focal_u: float, focal_v: float,
+                 W: int, H: int, cu: int = 0, cv: int = 0,
                  trans: np.ndarray = np.array([0, 0, 0]), scale: float = 1.0):
         # camera real world coords and rotation
         self.R = R
@@ -20,6 +23,10 @@ class DummyCamera:
         # camera parameters
         self.FoVx = FoVx
         self.FoVy = FoVy
+        self.focal_u = focal_u
+        self.focal_v = focal_v
+        self.cu = cu
+        self.cv = cv
         self.zfar = 100.0
         self.znear = 0.01
         self.image_width = W
@@ -45,13 +52,19 @@ class DummyCamera:
         tan_half_fov_x = np.tan((self.FoVx / 2))
         tan_half_fov_y = np.tan((self.FoVy / 2))
 
-        top = tan_half_fov_y * self.znear
-        bottom = -top
-        right = tan_half_fov_x * self.znear
-        left = -right
+        # shift the frame window due to the non-zero principle point offsets
+        offset_u = self.cu - (self.image_width / 2)
+        offset_u = (offset_u / self.focal_u) * self.znear
+        offset_v = self.cv - (self.image_height / 2)
+        offset_v = (offset_v / self.focal_v) * self.znear
 
-        z_sign = 1.0
+        top = (tan_half_fov_y * self.znear) + offset_v
+        left = -(tan_half_fov_x * self.znear) + offset_u
+        right = (tan_half_fov_x * self.znear) + offset_u
+        bottom = (-tan_half_fov_y * self.znear) + offset_v
+
         P = torch.zeros(4, 4)
+        z_sign = 1.0
         P[0, 0] = 2.0 * self.znear / (right - left)
         P[1, 1] = 2.0 * self.znear / (top - bottom)
         P[0, 2] = (right + left) / (right - left)
@@ -81,6 +94,7 @@ class DummyPipeline:
     compute_cov3D_python = False
     debug = False
 
+
 parser = ArgumentParser(description="Testing script parameters")
 model = ModelParams(parser, sentinel=True)
 args = get_combined_args(parser)
@@ -96,21 +110,21 @@ background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
 render_path = os.path.join(model.model_path, "custom", "ours_{}".format(iteration), "renders")
 makedirs(render_path, exist_ok=True)
 
-
 rotx = np.array([-20]) * np.pi / 180
-roty = np.array([165]) * np.pi / 180  # need to negate to match o3d
+roty = np.array([-165]) * np.pi / 180  # need to negate to match o3d
 rotz = np.array([0]) * np.pi / 180
 R = make_rotation(rotx, roty, rotz)
 
-tx, ty, tz = .5, -1, 5
+tx, ty, tz = 1, -1, 4
 
 T = np.array([tx, ty, tz])
 
 FoVx, FoVy = 1.0, 1.0
+focal_u, focal_v = 1500
 W, H = 1500, 1500
-mycam = DummyCamera(R, T, FoVx, FoVy, W=W, H=W)
+mycam = DummyCamera(R, T, FoVx, FoVy, focal_u, focal_v, W=W, H=W)
 rendering = render(mycam, gaussians, DummyPipeline(), background)["render"]
-path_render=  os.path.join(render_path, '{0:05d}'.format(0) + ".png")
+path_render = os.path.join(render_path, '{0:05d}'.format(0) + ".png")
 print(f'Outputting render to: {path_render}')
 
 torchvision.utils.save_image(rendering, path_render)
